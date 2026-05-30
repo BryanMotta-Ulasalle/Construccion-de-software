@@ -1,10 +1,12 @@
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import Nav from "../components/my_ui/Nav";
+import {UserProvider} from "../context/UserContext"
 
 const DashboardLayout = () => {
   return (
-    <div className="flex flex-row ">
+    <UserProvider>
+      <div className="flex flex-row ">
       <aside className="flex-2 h-screen p-4 bg-sidebar">
         <Nav />
       </aside>
@@ -12,6 +14,7 @@ const DashboardLayout = () => {
         <Outlet />
       </main>
     </div>
+    </UserProvider>
   );
 };
 

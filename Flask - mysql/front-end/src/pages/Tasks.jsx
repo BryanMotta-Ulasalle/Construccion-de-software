@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
+import { Search } from "lucide-react";
 import { createTask, updateTask, deleteTask, getTaskDoneCount, getTaskPendingCount, getTasks } from "../services/tasks.services";
 import Title from "../components/my_ui/Title";
 import AddTask from "../components/my_ui/AddTask";
 import TableTasks from "../components/my_ui/TableTasks";
 import EditTask from "../components/my_ui/EditTask";
 import StatsCard from "../components/my_ui/StatsCard";
+import {UserContext} from "../context/UserContext"
+
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
@@ -14,6 +17,9 @@ const Tasks = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [inputValue, setInputValue] = useState("");
   const [inputValueName, setInputValueName] = useState("");
+
+  const [inputValueAsignUser, setInputValueAsignUser] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -28,12 +34,16 @@ const Tasks = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [totalTasksDone, setTotalTasksDone] = useState(0);
   const [totalTasksPending, setTotalTasksPending] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+
+  const { users } = useContext(UserContext);
 
 
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await getTasks(currentPage, pageSize);
+        const res = await getTasks(currentPage, pageSize, searchQuery);
         setTasks(res.data.data);
         setTotalTasks(res.data.total);
         setTotalPages(res.data.pages);
@@ -46,7 +56,7 @@ const Tasks = () => {
     }
     
     loadData();
-  }, [currentPage, pageSize, refreshTrigger]);
+  }, [currentPage, pageSize, refreshTrigger, searchQuery]);
 
    async function tasksStats() { 
     try {
@@ -72,6 +82,7 @@ const Tasks = () => {
       await createTask({
         name: inputValueName.trim(),
         content: inputValue.trim(),
+        user_id: inputValueAsignUser
       });
       console.log("Task created successfully");
       setCurrentPage(1); // Volver a primera página para ver la nueva tarea
@@ -149,7 +160,26 @@ const Tasks = () => {
           postTask={postTask}
           inputValueName={inputValueName}
           setInputValueName={setInputValueName}
+          inputValueAsignUser={inputValueAsignUser}
+          setInputValueAsignUser={setInputValueAsignUser}
+          users={users}
         />
+      </div>
+      {/* Search Input */}
+      <div className="flex justify-center w-full mb-4">
+        <div className="relative w-full max-w-md">
+          <input
+            type="text"
+            placeholder="Buscar tareas por nombre o contenido..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
+            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+        </div>
       </div>
       <div className="flex flex-row gap-10 justify-center w-full">
         <StatsCard

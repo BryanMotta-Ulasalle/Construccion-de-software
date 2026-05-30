@@ -1,10 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Button } from '../ui/button';
-import { FieldGroup, Field } from '../ui/field';
+import { FieldGroup, Field, FieldLabel } from '../ui/field';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
-const AddTask = ({ isDialogOpen, setIsDialogOpen, inputValue, setInputValue, isLoading, postTask, inputValueName, setInputValueName }) => {
+const AddTask = ({ isDialogOpen, setIsDialogOpen, inputValue, setInputValue, isLoading, postTask, inputValueName, setInputValueName, inputValueAsignUser, setInputValueAsignUser, users }) => {
   
     return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -36,6 +37,19 @@ const AddTask = ({ isDialogOpen, setIsDialogOpen, inputValue, setInputValue, isL
                                     placeholder="Ingresa el contenido de la tarea"
                                     disabled={isLoading}
                                 />
+                            </Field>
+                            <Field>
+                                <FieldLabel htmlFor="user_id">Assign user</FieldLabel>
+                                <Select value={inputValueAsignUser} onValueChange={(value) => setInputValueAsignUser(value)}>
+                                    <SelectTrigger >
+                                        <SelectValue placeholder="Selecciona un usuario"/>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {users.map((user) => (
+                                            <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </Field>
                             <Button type="submit" disabled={isLoading}>
                                 {isLoading ? 'Creando...' : 'Crear'}
