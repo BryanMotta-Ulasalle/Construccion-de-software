@@ -1,20 +1,48 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useTasks } from './composables/useTasks'
-import TaskForm from './components/TaskForm.vue'
-import TaskList from './components/TaskList.vue'
-import UiAlert from './components/UiAlert.vue'
+import TaskForm    from './components/TaskForm.vue'
+import TaskList    from './components/TaskList.vue'
+import UiAlert     from './components/UiAlert.vue'
+import UiNotice    from './components/UiNotice.vue'
 
 const {
-  tasks, loading, error, saving,
+  tasks, loading, error, saving, notice,
   load, addTask, toggleTask, editTask, removeTask,
 } = useTasks()
 
-// Ejercicio C: filtro con búsqueda
-const query = ref('')
+// ── Ejercicio C: búsqueda con debounce ───────────────────────────────────────
+const query        = ref('')
+const debouncedQ   = ref('')
+let debounceTimer  = null
+
+watch(query, (val) => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => { debouncedQ.value = val }, 300)
+})
+
 const visibleTasks = computed(() =>
-  tasks.value.filter(t => t.title.toLowerCase().includes(query.value.toLowerCase()))
+  [...tasks.value]
+    .filter(t =>
+      t.title.toLowerCase().includes(debouncedQ.value.toLowerCase())
+    )
+    .sort((a,b)=>
+      new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+    )
 )
+
+const currentPage = ref(1)
+const pageSize = 10
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(visibleTasks.value.length / pageSize))
+)
+
+const paginatedTasks = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return visibleTasks.value.slice(start, start + pageSize)
+})
+// ─────────────────────────────────────────────────────────────────────────────
 
 const pendingCount = computed(() => tasks.value.filter(t => !t.done).length)
 
@@ -26,14 +54,16 @@ onMounted(load)
     <header class="header">
       <div class="header-top">
         <h1>Task Board</h1>
-        <span v-if="!loading" class="badge">{{ pendingCount }} pendiente{{ pendingCount !== 1 ? 's' : '' }}</span>
+        <span v-if="!loading" class="badge">
+          {{ pendingCount }} pendiente{{ pendingCount !== 1 ? 's' : '' }}
+        </span>
       </div>
       <p class="subtitle">Gestiona tus tareas conectado a una API REST</p>
     </header>
 
     <TaskForm :disabled="saving" @submit="addTask" />
 
-    <!-- Filtro de búsqueda (Ejercicio C) -->
+    <!-- Ejercicio C: filtro con debounce -->
     <div class="search-wrapper">
       <span class="search-icon">🔍</span>
       <input
@@ -44,6 +74,10 @@ onMounted(load)
       />
     </div>
 
+    <!-- Ejercicio D: notificación de éxito (verde) -->
+    <UiNotice v-if="notice" :message="notice" />
+
+    <!-- Banner de error (rojo) -->
     <UiAlert v-if="error" :message="error" />
 
     <div v-if="loading" class="state">
@@ -53,15 +87,21 @@ onMounted(load)
 
     <TaskList
       v-else
-      :tasks="visibleTasks"
+      :tasks="paginatedTasks"
       @toggle="toggleTask"
       @edit="editTask"
       @remove="removeTask"
     />
 
-<!--     <footer class="footer">
+    <div v-if="!loading" class="pagination">
+      <button @click="currentPage--" :disabled="currentPage===1">Anterior</button>
+      <span>Página {{ currentPage }} de {{ totalPages }}</span>
+      <button @click="currentPage++" :disabled="currentPage>=totalPages">Siguiente</button>
+    </div>
+
+    <footer class="footer">
       💡 Doble clic en una tarea para editarla inline
-    </footer> -->
+    </footer>
   </main>
 </template>
 
@@ -156,6 +196,13 @@ h1 {
   to { transform: rotate(360deg); }
 }
 
+.pagination {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:1rem;
+  margin-top:1rem;
+}
 .footer {
   margin-top: 24px;
   text-align: center;

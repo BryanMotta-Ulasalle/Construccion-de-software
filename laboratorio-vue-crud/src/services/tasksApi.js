@@ -1,6 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_URL
+const BASE_URL = 'https://6a3937e564a2d82692239e2b.mockapi.io/api/task'
 
-// helper: valida la respuesta y parsea JSON
 async function handle(res) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.status === 204 ? null : res.json()
@@ -8,23 +7,23 @@ async function handle(res) {
 
 export const tasksApi = {
   getAll() {
-    return fetch(`${BASE_URL}/tasks`).then(handle)
+    return fetch(`${BASE_URL}`).then(handle)
   },
   create(task) {
-    return fetch(`${BASE_URL}/tasks`, {
+    return fetch(`${BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(task),
     }).then(handle)
   },
   update(id, changes) {
-    return fetch(`${BASE_URL}/tasks/${id}`, {
-      method: 'PATCH',
+    return fetch(`${BASE_URL}/${id}`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(changes),
     }).then(handle)
   },
   remove(id) {
-    return fetch(`${BASE_URL}/tasks/${id}`, { method: 'DELETE' }).then(handle)
+    return fetch(`${BASE_URL}/${id}`, { method: 'DELETE' }).then(handle)
   },
 }
